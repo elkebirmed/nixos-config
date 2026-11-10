@@ -6,17 +6,16 @@
   };
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Needed for the btrfs rollback unit (see btrfs-rollback.nix)
+  # rollback unit in btrfs-rollback.nix runs inside it.
   boot.supportedFilesystems = [ "btrfs" ];
 
-  # Swap
   zramSwap = {
     enable = true;
     memoryPercent = 50;
   };
   boot.kernel.sysctl."vm.swappiness" = 150;
 
-  services.fstrim.enable = true; # LUKS allowDiscards is on
+  services.fstrim.enable = true;
   services.btrfs.autoScrub = {
     enable = true;
     interval = "monthly";

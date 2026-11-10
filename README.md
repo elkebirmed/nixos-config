@@ -1,7 +1,7 @@
 # NixOS starter
 
 flake-parts · haumea · home-manager · disko · sops-nix · impermanence
-LUKS → btrfs (`root` wiped every boot)
+btrfs (`root` wiped every boot)
 
 ## Layout
 ```
@@ -16,7 +16,7 @@ Add a host: copy `hosts/crazy`. Add a user: copy `users/mohamed`, then set `my.u
 on the hosts that need them. Per-user options: `admin`, `extraGroups`, `sshKeys`, `persistDirs`.
 
 ## Disk
-GPT: 1 GB ESP + LUKS (rest) → btrfs subvolumes `root` (wiped each boot), `nix`, `persist`, `log` (/var/log).
+GPT: 1 GB ESP + btrfs (rest) with subvolumes `root` (wiped each boot), `nix`, `persist`, `log` (/var/log).
 Anything outside those and the paths in `modules/nixos/impermanence.nix` (plus
 `my.users.<n>.persistDirs`) disappears on reboot. `sudo find / -xdev -newer /etc/machine-id`
 helps spot what you'd want to persist.
@@ -35,19 +35,11 @@ Common to both paths. Boot the NixOS installer (get online first: `nmtui` or pla
    Everything below is run from inside this directory, and the flake only sees git-tracked files, so `git add -A` after every edit.
 1. `lsblk`, then set `my.disk.device` in `hosts/<host>/default.nix`.
 2. `nixos-generate-config --no-filesystems --show-hardware-config > hosts/<host>/hardware-configuration.nix`
-3. Partition + mount (asks you to choose the LUKS passphrase):
+3. Partition + mount:
    ```
    sudo nix --experimental-features 'nix-command flakes' run github:nix-community/disko/latest -- \
      --mode destroy,format,mount --flake .#<host>
    ```
-4. Auto-unlock key (no LUKS prompt at boot). Disko just asked you for a passphrase; keep it as the recovery fallback. Now add a random key file next to it:
-   ```
-   sudo mkdir -p /mnt/persist/etc/secrets
-   sudo dd if=/dev/urandom of=/mnt/persist/etc/secrets/luks.key bs=4096 count=1
-   sudo chmod 400 /mnt/persist/etc/secrets/luks.key
-   sudo cryptsetup luksAddKey /dev/disk/by-partlabel/disk-main-luks /mnt/persist/etc/secrets/luks.key
-   ```
-   (asks for the passphrase once). `nixos-install` copies this key into the initrd on the ESP, which the initrd uses to unlock the disk. This is convenience, not protection: the ESP is unencrypted, so anyone holding the disk can read the key. To go back to prompting, set `my.disk.autoUnlock = false;` on the host. Do this step before `nixos-install`; the install fails if the key file is missing.
 
 Then pick **A** or **B**.
 
@@ -123,7 +115,6 @@ Log in with the password from the secrets file. Later: `sudo nixos-rebuild switc
 
 ## Notes
 - `my.secrets.enable` turns on automatically once `secrets/common.yaml` exists.
-- `allowDiscards = true` (TRIM through LUKS) reveals which blocks are used; drop it in `disk.nix` if that matters.
-- The rollback unit assumes the LUKS mapping is named `cryptroot`.
+- The rollback unit (`modules/nixos/btrfs-rollback.nix`) expects the root partition at `/dev/disk/by-partlabel/disk-main-root` (created by `disk.nix`).
 - Set `time.timeZone` per host. Bump `stateVersion` only deliberately.
 - Untested starter: run `nix flake check` and adjust to your nixpkgs/home-manager versions.
