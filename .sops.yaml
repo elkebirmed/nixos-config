@@ -1,0 +1,11 @@
+# age keys: your personal key (age-keygen) + each host's SSH host key:
+#   ssh-to-age < /mnt/persist/etc/ssh/ssh_host_ed25519_key.pub
+keys:
+  - &admin_mohamed age1REPLACE_WITH_YOUR_PUBLIC_AGE_KEY
+  - &host_crazy age1REPLACE_WITH_HOST_KEY
+creation_rules:
+  - path_regex: secrets/common\.yaml$
+    key_groups:
+      - age:
+          - *admin_mohamed
+          - *host_crazy
