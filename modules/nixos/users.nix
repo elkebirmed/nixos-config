@@ -87,6 +87,9 @@ in
       directories = [
         "Documents"
         "Downloads"
+        "Pictures"
+        "Videos"
+        "Audio"
         "Projects"
         {
           directory = ".ssh";
