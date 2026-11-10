@@ -8,6 +8,17 @@
     description = "Whole-disk device to partition with disko.";
   };
 
+  options.my.disk.autoUnlock = lib.mkOption {
+    type = lib.types.bool;
+    default = true;
+    description = ''
+      Unlock LUKS without a prompt using a key file embedded in the initrd on the
+      (unencrypted) ESP. Convenience only: anyone with the disk can read the key.
+      The key lives at /persist/etc/secrets/luks.key and is copied into the initrd
+      on every bootloader install. Your passphrase stays as a fallback keyslot.
+    '';
+  };
+
   config = {
     disko.devices.disk.main = {
       type = "disk";
@@ -30,7 +41,11 @@
             content = {
               type = "luks";
               name = "cryptroot"; # referenced by btrfs-rollback.nix
-              settings.allowDiscards = true;
+              settings = {
+                allowDiscards = true;
+              } // lib.optionalAttrs config.my.disk.autoUnlock {
+                keyFile = "/luks.key"; # path inside the initrd (see below)
+              };
               content = {
                 type = "btrfs";
                 extraArgs = [ "-f" "-L" "nixos" ];
@@ -59,6 +74,10 @@
           };
         };
       };
+    };
+
+    boot.initrd.secrets = lib.mkIf config.my.disk.autoUnlock {
+      "/luks.key" = "/persist/etc/secrets/luks.key"; # read at bootloader install time
     };
 
     fileSystems."/persist".neededForBoot = true;
