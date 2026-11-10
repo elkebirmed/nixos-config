@@ -38,7 +38,15 @@
       let
         inherit (nixpkgs) lib;
         pathLoader = _inputs: path: path;
-        load = src: haumea.lib.load { inherit src; loader = pathLoader; };
+        
+        load =
+          src:
+          haumea.lib.load {
+            inherit src;
+            loader = pathLoader;
+            transformer = [ haumea.lib.transformers.liftDefault ];
+          };
+
         modulesIn = src: lib.collect builtins.isPath (load src);
 
         nixosModules = modulesIn ./modules/nixos; # applied to EVERY host
