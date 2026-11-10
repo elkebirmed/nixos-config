@@ -39,12 +39,13 @@
         inherit (nixpkgs) lib;
         pathLoader = _inputs: path: path;
         
+        collapseDefault = _cursor: dir: dir.default or dir;
         load =
           src:
           haumea.lib.load {
             inherit src;
             loader = pathLoader;
-            transformer = [ haumea.lib.transformers.liftDefault ];
+            transformer = [ collapseDefault ];
           };
 
         modulesIn = src: lib.collect builtins.isPath (load src);
