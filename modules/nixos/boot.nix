@@ -7,7 +7,6 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Needed for the btrfs rollback unit (see btrfs-rollback.nix)
-  boot.initrd.systemd.enable = true;
   boot.supportedFilesystems = [ "btrfs" ];
 
   # Swap
