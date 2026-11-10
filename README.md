@@ -40,6 +40,14 @@ Common to both paths. Boot the NixOS installer (get online first: `nmtui` or pla
    sudo nix --experimental-features 'nix-command flakes' run github:nix-community/disko/latest -- \
      --mode destroy,format,mount --flake .#<host>
    ```
+4. Auto-unlock key (no LUKS prompt at boot). Disko just asked you for a passphrase; keep it as the recovery fallback. Now add a random key file next to it:
+   ```
+   sudo mkdir -p /mnt/persist/etc/secrets
+   sudo dd if=/dev/urandom of=/mnt/persist/etc/secrets/luks.key bs=4096 count=1
+   sudo chmod 400 /mnt/persist/etc/secrets/luks.key
+   sudo cryptsetup luksAddKey /dev/disk/by-partlabel/disk-main-luks /mnt/persist/etc/secrets/luks.key
+   ```
+   (asks for the passphrase once). `nixos-install` copies this key into the initrd on the ESP, which the initrd uses to unlock the disk. This is convenience, not protection: the ESP is unencrypted, so anyone holding the disk can read the key. To go back to prompting, set `my.disk.autoUnlock = false;` on the host. Do this step before `nixos-install`; the install fails if the key file is missing.
 
 Then pick **A** or **B**.
 
