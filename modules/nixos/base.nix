@@ -20,5 +20,8 @@
     ];
   };
 
-  environment.systemPackages = with pkgs; [ git vim curl htop btrfs-progs compsize ];
+  environment.systemPackages = with pkgs; [
+    git vim curl htop btrfs-progs compsize
+    sops age ssh-to-age mkpasswd
+  ];
 }

@@ -96,6 +96,10 @@ in
           directory = ".gnupg";
           mode = "0700";
         }
+        {
+          directory = ".config/sops";
+          mode = "0700";
+        }
       ] ++ u.persistDirs;
     }) cfg;
 
